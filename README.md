@@ -10,4 +10,4 @@ As for now, filename is in code, and it is called "image.bmp", so only this file
 I've noticed that not everu bmp pricture is processing, it is caused by my restrictions in class.
 If someone is reading this and he/she wants to improve this program - I am opened to any suggestions.
 
-This program was made with WholeLottaRain, my friend and groupmate from MAI, Oleg Yablokov.
+This program was made with help and support by WholeLottaRain, my friend and groupmate from MAI, Oleg Yablokov.
