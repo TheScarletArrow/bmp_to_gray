@@ -204,7 +204,6 @@ int main(int argc, char* argv[])
 	mm2 = Inverse(m);
 	mm2.Save(out2);
 
-	system("pause");
 	return 0;
 
 }
