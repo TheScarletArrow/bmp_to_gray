@@ -1,14 +1,16 @@
-#include "pch.h"
+//#include "pch.h"
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
 #include <cstring>
 #include <string>
+#include <windows.h>
 
 
 using namespace std;
-#include <windows.h>
+
 #define BYTE  unsigned char
+
 #define DWORD unsigned long
 #define WORD unsigned short
 
@@ -66,6 +68,8 @@ public:
 	{
 		height = 0;
 		width = 0;
+		rowsize=0;
+		term=0;
 	}
 
 	ImageMatrix(int height, int width)
@@ -83,7 +87,7 @@ public:
 		ifstream InputFile;
 		InputFile.open(file, ios::binary);
 		InputFile.seekg(0, InputFile.end);
-		cout << "File Size:" << InputFile.tellg() << "byte(s)" << endl;
+		cout << "File Size: " << InputFile.tellg() << " byte(s)" << endl;
 		InputFile.seekg(0, InputFile.beg);
 		InputFile.read((char*)& h, sizeof(h));
 		InputFile.read((char*)& hInfo, sizeof(hInfo));
@@ -106,14 +110,14 @@ public:
 		*this = ImageMatrix(height, width);
 		InputFile.read((char*)term, height * rowsize);
 		InputFile.close();
-		return 1;
+		return true;
 	}
 
 	bool Save(char* file)
 	{
 		BITMAPFILEHEADER h = {
 			0x4d42,
-			54L + rowsize * height,
+			static_cast<DWORD>(54L + rowsize*height),
 			0,
 			0,
 			54
@@ -125,7 +129,7 @@ public:
 			1, //plans
 			24, //bit per pixel
 			0, // compression
-			rowsize * height, //Image Matrix Size
+			static_cast<DWORD>(rowsize*height), //Image Matrix Size
 			3780, //bits per meter x
 			3780, //bits per meter y
 			0, //number of used colours
@@ -139,14 +143,12 @@ public:
 		OutputFile.write((char*)term, rowsize * height);
 		OutputFile.close();
 		cout << endl;
-		return 1;
+		return true;
 	}
 };
 
-ImageMatrix ChangeSize(ImageMatrix m)
+ImageMatrix ToGray(ImageMatrix m)
 {
-	//x - multuplier of width&height
-
 	ImageMatrix mm = ImageMatrix(m.height, m.width);
 	for (int y = 0; y < m.height; y++) {
 		for (int xx = 0; xx < m.rowsize; xx += 3)
@@ -162,22 +164,48 @@ ImageMatrix ChangeSize(ImageMatrix m)
 	return mm;
 }
 
+ImageMatrix Inverse(ImageMatrix m)
+{
+    ImageMatrix mm = ImageMatrix(m.height, m.width);
+    for (int y=0;y<m.height;y++)
+        for (int xx=0;xx<m.rowsize;xx+=3)
+        {
+            BYTE B = m.term[y * m.rowsize + xx];
+            BYTE G = m.term[y * m.rowsize + xx + 1];
+            BYTE R = m.term[y * m.rowsize + xx + 2];
+
+            B= (BYTE)(255- (B));
+            G=(BYTE)(255-(G));
+            R=(BYTE)(255-(R));
+
+
+            mm.term[y * m.rowsize + xx] = B;
+            mm.term[y * m.rowsize + xx + 1] = G;
+            mm.term[y * m.rowsize + xx + 2] = R;
+
+        }
+    return mm;
+}
+
 int main(int argc, char* argv[])
 {
 	cout << sizeof(BITMAPFILEHEADER) << endl;
 	cout << sizeof(BITMAPINFOHEADER) << endl;
-	ImageMatrix m, mm;
-	char a[11] = "image.bmp";
+	ImageMatrix m, mm1, mm2;
+    char inputimage[]="image.bmp";
 
-	char c[13] = "imageout.bmp";
-	m.load(a);
+	char out1[] = "imageout.bmp";
+	char out2[] = "omageout2.bmp";
+	m.load(inputimage);
 
-	mm = ChangeSize(m);
+	mm1 = ToGray(m);
+	mm1.Save(out1);
 
-	mm.Save(c);
+	mm2 = Inverse(m);
+	mm2.Save(out2);
+
 	system("pause");
 	return 0;
-
 
 }
 
